@@ -5,8 +5,15 @@ hostname: debian-template
 
 users:
   - default
+  - name: jnbolsen
+    gecos: Primary administrator
+    groups: sudo
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAA_YOUR_PUBLIC_KEY_HERE
   - name: ansible
-    gecos: Ansible User
+    gecos: Ansible automation user
     groups: sudo
     sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/bash
