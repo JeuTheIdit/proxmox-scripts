@@ -4,62 +4,75 @@ set -euo pipefail
 # User config
 VMID=9000
 VM_NAME="debian-13-cloudinit"
-STORAGE="local-zfs-vm"          # Change if needed (e.g. zfs, ceph, local)
-BRIDGE="vmbr1"
+DISK_STORAGE="local-zfs-vm" # VM disks
+CI_STORAGE="local" # Cloud-init ISO
+BRIDGE0="vmbr0" # Primary network
+BRIDGE1="vmbr1" # Secondary network (optional)
 CORES=2
 MEMORY=2048
 DISK_SIZE=8G
+TAGS="debian,cloudinit,docker"
 IMAGE_URL="https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-amd64.qcow2"
 IMAGE_FILE="debian-13-genericcloud-amd64.qcow2"
 
 #Download cloud image
-echo "==> Downloading Debian 13 cloud image"
+echo "Downloading Debian 13 cloud image"
 wget -q --show-progress -O "${IMAGE_FILE}" "${IMAGE_URL}"
 
 # Create VM
-echo "==> Creating VM ${VMID} (${VM_NAME})"
+echo "Creating VM ${VMID} (${VM_NAME})"
 qm create ${VMID} \
   --name ${VM_NAME} \
   --memory ${MEMORY} \
   --cores ${CORES} \
-  --net0 virtio,bridge=${BRIDGE} \
   --ostype l26 \
   --agent enabled=1 \
   --machine q35 \
   --scsihw virtio-scsi-pci
+  --tags "${TAGS}"
+
+echo "Adding network interfaces"
+qm set ${VMID} \
+  --net0 virtio,bridge=${BRIDGE0} \
+  --net1 virtio,bridge=${BRIDGE1}
 
 # Import and attach disk
-echo "==> Importing disk"
-qm importdisk ${VMID} ${IMAGE_FILE} ${STORAGE}
+echo "Importing VM disk"
+qm importdisk ${VMID} ${IMAGE_FILE} ${DISK_STORAGE}
 
-echo "==> Attaching disk"
+echo "Attaching main disk to VM"
 qm set ${VMID} \
-  --scsi0 ${STORAGE}:vm-${VMID}-disk-0,discard=on,ssd=1 \
+  --scsi0 ${DISK_STORAGE}:vm-${VMID}-disk-0,discard=on,ssd=1 \
   --boot order=scsi0
 
 # Add cloud-init drive
-echo "==> Adding Cloud-Init drive"
+echo "Adding Cloud-Init drive"
 qm set ${VMID} \
-  --ide2 ${STORAGE}:cloudinit
+  --ide2 ${CI_STORAGE}:cloudinit
 
 # Set defaults
-echo "==> Setting Cloud-Init defaults"
+echo "Setting Cloud-Init defaults"
 qm set ${VMID} \
-  --ciuser ansible \
+  --ciuser jnbolsen \
   --ipconfig0 ip=dhcp \
   --serial0 socket \
   --vga serial0
 
 # Resize disk
-echo "==> Resizing disk to ${DISK_SIZE}"
+echo "Resizing disk to ${DISK_SIZE}"
 qm resize ${VMID} scsi0 ${DISK_SIZE}
 
 # Convert to template
-echo "==> Converting VM to template"
+echo "Converting VM to template"
 qm template ${VMID}
 
 # Clean up
-echo "==> Cleaning up image file"
+echo "Cleaning up image file"
 rm -f ${IMAGE_FILE}
 
-echo "==> Debian 13 Cloud-Init template ${VM_NAME} (${VMID}) ready"
+echo "==> Debian 13 Cloud-Init template is ready!"
+echo "    VMID: ${VMID}"
+echo "    Name: ${VM_NAME}"
+echo "    Tags: ${TAGS}"
+echo "    Main disk storage: ${DISK_STORAGE}"
+echo "    Cloud-Init ISO storage: ${CI_STORAGE}"
