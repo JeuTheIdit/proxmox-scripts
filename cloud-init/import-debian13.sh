@@ -76,6 +76,5 @@ rm -f ${IMAGE_FILE}
 echo "==> Debian 13 Cloud-Init template is ready!"
 echo "    VMID: ${VMID}"
 echo "    Name: ${VM_NAME}"
-echo "    Tags: ${TAGS}"
 echo "    Main disk storage: ${DISK_STORAGE}"
 echo "    Cloud-Init ISO storage: ${CI_STORAGE}"
