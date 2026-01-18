@@ -11,7 +11,6 @@ BRIDGE1="vmbr1" # Secondary network (optional)
 CORES=2
 MEMORY=2048
 DISK_SIZE=8G
-TAGS="debian,cloudinit,docker"
 IMAGE_URL="https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-amd64.qcow2"
 IMAGE_FILE="debian-13-genericcloud-amd64.qcow2"
 
@@ -26,10 +25,14 @@ qm create ${VMID} \
   --memory ${MEMORY} \
   --cores ${CORES} \
   --ostype l26 \
+  --bios ovmf \
   --agent enabled=1 \
   --machine q35 \
-  --scsihw virtio-scsi-pci
-  --tags "${TAGS}"
+  --scsihw virtio-scsi-single \
+
+echo "==> Adding EFI disk (stored on VM disk storage)"
+qm set ${VMID} \
+  --efidisk0 ${DISK_STORAGE}:0,efitype=4m,pre-enrolled-keys=1
 
 echo "Adding network interfaces"
 qm set ${VMID} \
