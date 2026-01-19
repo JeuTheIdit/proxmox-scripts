@@ -4,8 +4,8 @@ set -euo pipefail
 # User config
 VMID=9000
 VM_NAME="debian-13-cloudinit"
-DISK_STORAGE="local-zfs-vm" # VM disks
-CI_STORAGE="local" # Cloud-init ISO
+DISK_STORAGE="local-zfs-vm" # VM + EFI disk (ZFS)
+CI_STORAGE="local" # Cloud-init ISO storage
 BRIDGE0="vmbr0" # Primary network
 BRIDGE1="vmbr1" # Secondary network (optional)
 CORES=2
@@ -30,20 +30,24 @@ qm create ${VMID} \
   --machine q35 \
   --scsihw virtio-scsi-single \
 
-echo "==> Adding EFI disk (stored on VM disk storage)"
+# Add  EFI disk
+echo "Adding EFI disk"
 qm set ${VMID} \
   --efidisk0 ${DISK_STORAGE}:0,efitype=4m,pre-enrolled-keys=1
 
+# Add network interfaces
 echo "Adding network interfaces"
 qm set ${VMID} \
   --net0 virtio,bridge=${BRIDGE0} \
   --net1 virtio,bridge=${BRIDGE1}
 
-# Import and attach disk
-echo "Importing VM disk"
-qm importdisk ${VMID} ${IMAGE_FILE} ${DISK_STORAGE}
+# Create a new ZVOL for VM disk
+qm set ${VMID} --scsi0 ${DISK_STORAGE}:0
 
-echo "Attaching main disk to VM"
+# Import the cloud image into the ZVOL as raw
+qm importdisk ${VMID} ${IMAGE_FILE} ${DISK_STORAGE} --format raw
+
+# Attach the disk
 qm set ${VMID} \
   --scsi0 ${DISK_STORAGE}:vm-${VMID}-disk-0,discard=on,ssd=1 \
   --boot order=scsi0
@@ -62,7 +66,7 @@ qm set ${VMID} \
   --vga serial0
 
 # Resize disk
-echo "Resizing disk to ${DISK_SIZE}"
+echo "Resizing VM disk to ${DISK_SIZE}"
 qm resize ${VMID} scsi0 ${DISK_SIZE}
 
 # Convert to template
