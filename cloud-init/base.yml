@@ -1,8 +1,4 @@
 #cloud-config
-preserve_hostname: false
-
-hostname: debian-template
-
 users:
   - default
   - name: ansible
