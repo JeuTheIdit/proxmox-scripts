@@ -10,7 +10,7 @@ BRIDGE0="vmbr0" # Primary network
 BRIDGE1="vmbr1" # Secondary network (optional)
 CORES=2
 MEMORY=2048
-DISK_SIZE=8G
+DISK_SIZE="8G"
 IMAGE_URL="https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-amd64.qcow2"
 IMAGE_FILE="debian-13-genericcloud-amd64.qcow2"
 
@@ -42,7 +42,7 @@ qm set ${VMID} \
   --net1 virtio,bridge=${BRIDGE1}
 
 # Create a new ZVOL for VM disk
-qm set ${VMID} --scsi0 ${DISK_STORAGE}:${DISK_SIZE}
+qm set ${VMID} --scsi0 ${DISK_STORAGE}:0
 
 # Import the cloud image into the ZVOL as raw
 qm importdisk ${VMID} ${IMAGE_FILE} ${DISK_STORAGE} --format raw
@@ -51,6 +51,10 @@ qm importdisk ${VMID} ${IMAGE_FILE} ${DISK_STORAGE} --format raw
 qm set ${VMID} \
   --scsi0 ${DISK_STORAGE}:vm-${VMID}-disk-0,discard=on,ssd=1 \
   --boot order=scsi0
+
+# Resizing main disk
+echo "Resizing main disk to ${DISK_SIZE}"
+qm resize ${VMID} scsi0 ${DISK_SIZE}
 
 # Add cloud-init drive
 echo "Adding Cloud-Init drive"
