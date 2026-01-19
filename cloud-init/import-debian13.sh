@@ -42,7 +42,7 @@ qm set ${VMID} \
   --net1 virtio,bridge=${BRIDGE1}
 
 # Create a new ZVOL for VM disk
-qm set ${VMID} --scsi0 ${DISK_STORAGE}:0
+qm set ${VMID} --scsi0 ${DISK_STORAGE}:${DISK_SIZE}
 
 # Import the cloud image into the ZVOL as raw
 qm importdisk ${VMID} ${IMAGE_FILE} ${DISK_STORAGE} --format raw
@@ -64,10 +64,6 @@ qm set ${VMID} \
   --ipconfig0 ip=dhcp \
   --serial0 socket \
   --vga serial0
-
-# Resize disk
-echo "Resizing VM disk to ${DISK_SIZE}"
-qm resize ${VMID} scsi0 ${DISK_SIZE}
 
 # Convert to template
 echo "Converting VM to template"
