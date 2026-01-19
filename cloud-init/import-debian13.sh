@@ -46,7 +46,7 @@ qm importdisk ${VMID} ${IMAGE_FILE} ${DISK_STORAGE} --format raw
 
 # Attach the disk
 qm set ${VMID} \
-  --scsi0 ${DISK_STORAGE}:vm-${VMID}-disk-0,discard=on,ssd=1 \
+  --scsi0 ${DISK_STORAGE}:vm-${VMID}-disk-1,discard=on,ssd=1 \
   --boot order=scsi0
 
 # Resizing main disk
