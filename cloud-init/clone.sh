@@ -2,10 +2,9 @@
 set -euo pipefail
 
 # -----------------------------
-# Configuration / Defaults
+# Constants
 # -----------------------------
-STORAGE_DEFAULT=""   # optional: leave empty to inherit template storage
-FULL_CLONE=1         # 1 = full clone, 0 = linked clone
+SNIPPET_DIR="/var/lib/vz/snippets"
 
 # -----------------------------
 # Usage
@@ -13,22 +12,19 @@ FULL_CLONE=1         # 1 = full clone, 0 = linked clone
 usage() {
   cat <<EOF
 Usage:
-  $0 --template <template_vmid> --vmid <new_vmid> [options]
+  $0 --template <template_vmid> --vmid <new_vmid> --name <vm_name>
 
 Required:
   --template <id>     Template VMID
   --vmid <id>         New VMID
+  --name <name>       Name of the new VM (also used for snippet filename)
 
-Optional:
-  --name <name>       Name of the new VM
-  --storage <name>    Target storage (defaults to template storage)
-  --linked            Create a linked clone (fast, space-saving)
-  --help              Show this help
+Behavior:
+  - Always performs a full clone
+  - Creates Cloud-Init snippet: local:snippets/<vm_name>.yml
 
-Examples:
+Example:
   $0 --template 9000 --vmid 213 --name debian13-app01
-  $0 --template 9000 --vmid 214 --storage local-zfs-vm
-  $0 --template 9000 --vmid 215 --linked
 EOF
 }
 
@@ -38,7 +34,6 @@ EOF
 TEMPLATE_ID=""
 VMID=""
 VM_NAME=""
-STORAGE="$STORAGE_DEFAULT"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -53,14 +48,6 @@ while [[ $# -gt 0 ]]; do
     --name)
       VM_NAME="$2"
       shift 2
-      ;;
-    --storage)
-      STORAGE="$2"
-      shift 2
-      ;;
-    --linked)
-      FULL_CLONE=0
-      shift
       ;;
     --help|-h)
       usage
@@ -77,8 +64,8 @@ done
 # -----------------------------
 # Validation
 # -----------------------------
-if [[ -z "$TEMPLATE_ID" || -z "$VMID" ]]; then
-  echo "ERROR: --template and --vmid are required"
+if [[ -z "$TEMPLATE_ID" || -z "$VMID" || -z "$VM_NAME" ]]; then
+  echo "ERROR: --template, --vmid, and --name are required"
   usage
   exit 1
 fi
@@ -93,19 +80,44 @@ if ! qm status "$TEMPLATE_ID" &>/dev/null; then
   exit 1
 fi
 
+if [[ ! -d "$SNIPPET_DIR" ]]; then
+  echo "ERROR: Snippet directory not found: $SNIPPET_DIR"
+  exit 1
+fi
+
+SNIPPET_FILE="$SNIPPET_DIR/${VM_NAME}.yml"
+
+if [[ -e "$SNIPPET_FILE" ]]; then
+  echo "ERROR: Snippet already exists: $SNIPPET_FILE"
+  exit 1
+fi
+
 # -----------------------------
 # Clone
 # -----------------------------
 echo "Cloning template $TEMPLATE_ID → VM $VMID"
+echo "VM name: $VM_NAME"
 
-CLONE_ARGS=()
-CLONE_ARGS+=( "$TEMPLATE_ID" "$VMID" )
+qm clone "$TEMPLATE_ID" "$VMID" \
+  --full \
+  --name "$VM_NAME"
 
-[[ -n "$VM_NAME" ]] && CLONE_ARGS+=( "--name" "$VM_NAME" )
-[[ -n "$STORAGE" ]] && CLONE_ARGS+=( "--storage" "$STORAGE" )
-[[ "$FULL_CLONE" -eq 1 ]] && CLONE_ARGS+=( "--full" )
+# -----------------------------
+# Create Snippet
+# -----------------------------
+cat <<EOF > "$SNIPPET_FILE"
+#cloud-config
+hostname: ${VM_NAME}
+EOF
 
-qm clone "${CLONE_ARGS[@]}"
+chmod 600 "$SNIPPET_FILE"
 
-echo "Clone complete:"
+echo "Created Cloud-Init snippet:"
+echo "local:snippets/${VM_NAME}.yml"
+
+qm set $VMID \
+  -- cicustom "user=local:snippets/user.yml,vendor=local.snippets/${VM_NAME}.yml"
+  -- ipconfig0 ip=dhcp
+
+echo "Clone complete."
 qm config "$VMID"
