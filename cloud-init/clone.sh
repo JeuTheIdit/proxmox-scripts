@@ -1,90 +1,111 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Print help
+# -----------------------------
+# Configuration / Defaults
+# -----------------------------
+STORAGE_DEFAULT=""   # optional: leave empty to inherit template storage
+FULL_CLONE=1         # 1 = full clone, 0 = linked clone
+
+# -----------------------------
+# Usage
+# -----------------------------
 usage() {
-    cat <<EOF
-Usage: $0 --vmid <NEW_VM_ID> --name <NEW_VM_NAME> [options]
+  cat <<EOF
+Usage:
+  $0 --template <template_vmid> --vmid <new_vmid> [options]
 
 Required:
-  --vmid      VMID for the new VM
-  --name      Hostname / name for the new VM
+  --template <id>     Template VMID
+  --vmid <id>         New VMID
 
 Optional:
-  --ip        IP address with CIDR (e.g., 192.168.1.50/24)
-  --gw        Gateway IP (e.g., 192.168.1.1). Only used if --ip is set.
-  --sshkey    SSH public key string to inject into the VM
-  --help      Show this help message
-
-Description:
-  This script clones the Debian 13 Cloud-Init template (VMID 9000 by default)
-  and optionally sets hostname, IP address, gateway, and SSH key for the new VM.
-  Only the provided options are applied; other settings come from the template
-  or the base Cloud-Init YAML at local:snippets/base.yml.
+  --name <name>       Name of the new VM
+  --storage <name>    Target storage (defaults to template storage)
+  --linked            Create a linked clone (fast, space-saving)
+  --help              Show this help
 
 Examples:
-  Clone with just VMID and hostname:
-    $0 --vmid 9100 --name web01
-
-  Clone with IP + gateway:
-    $0 --vmid 9101 --name web02 --ip 192.168.1.51/24 --gw 192.168.1.1
-
-  Clone with SSH key:
-    $0 --vmid 9102 --name web03 --sshkey "ssh-ed25519 AAAA..."
-
-  Clone with everything:
-    $0 --vmid 9103 --name web04 --ip 192.168.1.52/24 --gw 192.168.1.1 --sshkey "ssh-ed25519 AAAA..."
+  $0 --template 9000 --vmid 213 --name debian13-app01
+  $0 --template 9000 --vmid 214 --storage local-zfs-vm
+  $0 --template 9000 --vmid 215 --linked
 EOF
-    exit 0
 }
 
-# Default values
-IP=""
-GATEWAY=""
-SSH_KEY=""
+# -----------------------------
+# Argument Parsing
+# -----------------------------
+TEMPLATE_ID=""
+VMID=""
+VM_NAME=""
+STORAGE="$STORAGE_DEFAULT"
 
-# Parse flags
 while [[ $# -gt 0 ]]; do
-    case "$1" in
-        --vmid) NEW_VM_ID="$2"; shift 2 ;;
-        --name) NEW_VM_NAME="$2"; shift 2 ;;
-        --ip) IP="$2"; shift 2 ;;
-        --gw) GATEWAY="$2"; shift 2 ;;
-        --sshkey) SSH_KEY="$2"; shift 2 ;;
-        --help) usage ;;
-        *) echo "Unknown option $1"; usage ;;
-    esac
+  case "$1" in
+    --template)
+      TEMPLATE_ID="$2"
+      shift 2
+      ;;
+    --vmid)
+      VMID="$2"
+      shift 2
+      ;;
+    --name)
+      VM_NAME="$2"
+      shift 2
+      ;;
+    --storage)
+      STORAGE="$2"
+      shift 2
+      ;;
+    --linked)
+      FULL_CLONE=0
+      shift
+      ;;
+    --help|-h)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      usage
+      exit 1
+      ;;
+  esac
 done
 
-# Validate required
-if [ -z "${NEW_VM_ID:-}" ] || [ -z "${NEW_VM_NAME:-}" ]; then
-    usage
+# -----------------------------
+# Validation
+# -----------------------------
+if [[ -z "$TEMPLATE_ID" || -z "$VMID" ]]; then
+  echo "ERROR: --template and --vmid are required"
+  usage
+  exit 1
 fi
 
-TEMPLATE_ID=9000                # Your Debian 13 Cloud-Init template VMID
-BASE_YAML="local:snippets/base.yml"
+if qm status "$VMID" &>/dev/null; then
+  echo "ERROR: VMID $VMID already exists"
+  exit 1
+fi
 
-echo "==> Cloning template $TEMPLATE_ID to VM $NEW_VM_ID ($NEW_VM_NAME)"
-qm clone $TEMPLATE_ID $NEW_VM_ID --name $NEW_VM_NAME --full
+if ! qm status "$TEMPLATE_ID" &>/dev/null; then
+  echo "ERROR: Template VMID $TEMPLATE_ID does not exist"
+  exit 1
+fi
 
-echo "==> Setting Cloud-Init options for $NEW_VM_ID"
-CI_ARGS="--cicustom $BASE_YAML --ciuser jnbolsen"
+# -----------------------------
+# Clone
+# -----------------------------
+echo "Cloning template $TEMPLATE_ID → VM $VMID"
 
-# Optional overrides
-[ -n "$NEW_VM_NAME" ] && CI_ARGS="$CI_ARGS --hostname $NEW_VM_NAME"
-[ -n "$IP" ] && {
-    if [ -n "$GATEWAY" ]; then
-        CI_ARGS="$CI_ARGS --ipconfig0 ip=${IP},gw=${GATEWAY}"
-    else
-        CI_ARGS="$CI_ARGS --ipconfig0 ip=${IP}"
-    fi
-}
-[ -n "$SSH_KEY" ] && CI_ARGS="$CI_ARGS --sshkey0 \"$SSH_KEY\""
+CLONE_ARGS=()
+CLONE_ARGS+=( "$TEMPLATE_ID" "$VMID" )
 
-# Apply Cloud-Init settings
-eval qm set $NEW_VM_ID $CI_ARGS
+[[ -n "$VM_NAME" ]] && CLONE_ARGS+=( "--name" "$VM_NAME" )
+[[ -n "$STORAGE" ]] && CLONE_ARGS+=( "--storage" "$STORAGE" )
+[[ "$FULL_CLONE" -eq 1 ]] && CLONE_ARGS+=( "--full" )
 
-echo "==> Starting VM $NEW_VM_ID"
-qm start $NEW_VM_ID
+qm clone "${CLONE_ARGS[@]}"
 
-echo "==> VM $NEW_VM_ID ($NEW_VM_NAME) created and started!"
+echo "Clone complete:"
+qm config "$VMID"
