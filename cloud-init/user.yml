@@ -16,7 +16,6 @@ users:
       - ssh-ed25519 AAAA_YOUR_PUBLIC_KEY_HERE
 
 disable_root: true
-ssh_pwauth: false
 
 package_update: true
 package_upgrade: false
@@ -37,7 +36,6 @@ write_files:
       AllowAgentForwarding no
 
 runcmd:
-  - systemctl enable --now qemu-guest-agent
-  - systemctl restart ssh
+  - reboot
 
 final_message: "Debian 13 Cloud-Init base template ready."
