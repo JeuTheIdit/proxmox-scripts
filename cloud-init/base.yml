@@ -17,10 +17,6 @@ package_upgrade: false
 
 packages:
   - qemu-guest-agent
-  - ca-certificates
-  - curl
-  - vim
-  - sudo
 
 write_files:
   - path: /etc/ssh/sshd_config.d/99-hardening.conf
