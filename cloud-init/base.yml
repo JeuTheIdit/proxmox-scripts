@@ -1,6 +1,12 @@
 #cloud-config
 users:
-  - default
+  - name: jnbolsen
+    gecos: Administrative user
+    groups: sudo
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAA_YOUR_PUBLIC_KEY_HERE
   - name: ansible
     gecos: Ansible automation user
     groups: sudo
