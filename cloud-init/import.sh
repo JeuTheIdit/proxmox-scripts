@@ -64,7 +64,8 @@ qm set ${VMID} \
   --ciuser jnbolsen \
   --ipconfig0 ip=dhcp \
   --serial0 socket \
-  --vga serial0
+  --vga serial0 \
+  --cicustom "vendor=local:snippets/base.yaml"
 
 # Convert to template
 echo "Converting VM to template"
