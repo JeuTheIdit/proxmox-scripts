@@ -116,8 +116,8 @@ echo "Created Cloud-Init snippet:"
 echo "local:snippets/${VM_NAME}.yml"
 
 qm set $VMID \
-  -- cicustom "user=local:snippets/user.yml,vendor=local.snippets/${VM_NAME}.yml"
-  -- ipconfig0 ip=dhcp
+  --cicustom "user=local:snippets/user.yml,vendor=local:snippets/${VM_NAME}.yml" \
+  --ipconfig0 ip=dhcp
 
-echo "Clone complete."
+echo "Clone complete"
 qm config "$VMID"
