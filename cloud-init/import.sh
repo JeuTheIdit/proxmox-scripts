@@ -29,16 +29,12 @@ qm create ${VMID} \
   --agent enabled=1 \
   --machine q35 \
   --scsihw virtio-scsi-single \
+  --net0 virtio,bridge=${BRIDGE0}
 
 # Add  EFI disk
 echo "Adding EFI disk"
 qm set ${VMID} \
   --efidisk0 ${DISK_STORAGE}:0,efitype=4m,pre-enrolled-keys=1
-
-# Add network interfaces
-echo "Adding network interfaces"
-qm set ${VMID} \
-  --net0 virtio,bridge=${BRIDGE0}
 
 # Import the cloud image into the ZVOL as raw
 qm importdisk ${VMID} ${IMAGE_FILE} ${DISK_STORAGE} --format raw
@@ -56,11 +52,6 @@ qm resize ${VMID} scsi0 ${DISK_SIZE}
 echo "Adding Cloud-Init drive"
 qm set ${VMID} \
   --ide2 ${CI_STORAGE}:cloudinit
-
-# Set defaults
-echo "Setting Cloud-Init defaults"
-qm set ${VMID} \
-  --cicustom "user=local:snippets/user.yml,network=local:snippets/network.yml"
 
 # Convert to template
 echo "Converting VM to template"
