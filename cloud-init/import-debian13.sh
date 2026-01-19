@@ -41,9 +41,6 @@ qm set ${VMID} \
   --net0 virtio,bridge=${BRIDGE0} \
   --net1 virtio,bridge=${BRIDGE1}
 
-# Create a new ZVOL for VM disk
-qm set ${VMID} --scsi0 ${DISK_STORAGE}:0
-
 # Import the cloud image into the ZVOL as raw
 qm importdisk ${VMID} ${IMAGE_FILE} ${DISK_STORAGE} --format raw
 
