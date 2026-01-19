@@ -6,8 +6,8 @@ VMID=9000
 VM_NAME="debian-13-cloudinit"
 DISK_STORAGE="local-zfs-vm" # VM + EFI disk (ZFS)
 CI_STORAGE="local" # Cloud-init ISO storage
-BRIDGE0="vmbr0" # Primary network
-BRIDGE1="vmbr1" # Secondary network (optional)
+BRIDGE0="vmbr1" # Primary network
+BRIDGE1="vmbr2" # Secondary network (optional)
 CORES=2
 MEMORY=2048
 DISK_SIZE="8G"
@@ -38,8 +38,7 @@ qm set ${VMID} \
 # Add network interfaces
 echo "Adding network interfaces"
 qm set ${VMID} \
-  --net0 virtio,bridge=${BRIDGE0} \
-  --net1 virtio,bridge=${BRIDGE1}
+  --net0 virtio,bridge=${BRIDGE0}
 
 # Import the cloud image into the ZVOL as raw
 qm importdisk ${VMID} ${IMAGE_FILE} ${DISK_STORAGE} --format raw
