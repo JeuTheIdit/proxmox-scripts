@@ -60,8 +60,7 @@ qm set ${VMID} \
 # Set defaults
 echo "Setting Cloud-Init defaults"
 qm set ${VMID} \
-  --ipconfig0 ip=dhcp \
-  --cicustom "user=local:snippets/base.yml"
+  --cicustom "user=local:snippets/user.yml,network=local:snippets/network.yml"
 
 # Convert to template
 echo "Converting VM to template"
