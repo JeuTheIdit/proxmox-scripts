@@ -4,13 +4,12 @@ set -euo pipefail
 # User config
 VMID=9000
 VM_NAME="debian-13-cloudinit"
-DISK_STORAGE="local-zfs-vm" # VM + EFI disk (ZFS)
-CI_STORAGE="local" # Cloud-init ISO storage
-BRIDGE0="vmbr1" # Primary network
-BRIDGE1="vmbr2" # Secondary network (optional)
+DISK_STORAGE="local-zfs-vm" # VM + EFI disk storage (ZFS)
+CI_STORAGE="local" # Cloud-init ISO and snippet storage
+BRIDGE="vmbr1" # Default network
 CORES=2
 MEMORY=2048
-DISK_SIZE="8G"
+DISK_SIZE="32G"
 IMAGE_URL="https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-amd64.qcow2"
 IMAGE_FILE="debian-13-genericcloud-amd64.qcow2"
 
@@ -24,12 +23,13 @@ qm create ${VMID} \
   --name ${VM_NAME} \
   --memory ${MEMORY} \
   --cores ${CORES} \
+  --cpu host \
   --ostype l26 \
   --bios ovmf \
   --agent enabled=1 \
   --machine q35 \
   --scsihw virtio-scsi-single \
-  --net0 virtio,bridge=${BRIDGE0}
+  --net0 virtio,bridge=${BRIDGE}
 
 # Add  EFI disk
 echo "Adding EFI disk"
@@ -62,7 +62,3 @@ echo "Cleaning up image file"
 rm -f ${IMAGE_FILE}
 
 echo "==> Debian 13 Cloud-Init template is ready!"
-echo "    VMID: ${VMID}"
-echo "    Name: ${VM_NAME}"
-echo "    Main disk storage: ${DISK_STORAGE}"
-echo "    Cloud-Init ISO storage: ${CI_STORAGE}"
