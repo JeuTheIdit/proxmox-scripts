@@ -134,7 +134,7 @@ echo "Created Cloud-Init vendor snippet local:snippets/${VM_NAME}.yml"
 
 # Set Clout-Init user and vendor config
 qm set "$VMID" \
-  --cicustom "user=local:snippets/user.yml,vendor=local:snippets/vendor.yml" \
+  --cicustom "user=local:snippets/user.yml,vendor=local:snippets/vendor.yml"
 
 echo "Clone complete"
 qm config "$VMID"
