@@ -132,10 +132,9 @@ chmod 600 "$SNIPPET_FILE"
 
 echo "Created Cloud-Init vendor snippet local:snippets/${VM_NAME}.yml"
 
-# Set VM config
+# Set Clout-Init user and vendor config
 qm set "$VMID" \
   --cicustom "user=local:snippets/user.yml,vendor=local:snippets/vendor.yml" \
-  --ipconfig0 ip=dhcp
 
 echo "Clone complete"
 qm config "$VMID"
