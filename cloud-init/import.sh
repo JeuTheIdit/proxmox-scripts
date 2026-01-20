@@ -26,7 +26,7 @@ qm create ${VMID} \
   --cpu host \
   --ostype l26 \
   --bios ovmf \
-  --agent enabled=1 \
+  --agent 1 \
   --onboot 1 \
   --machine q35 \
   --scsihw virtio-scsi-single \
