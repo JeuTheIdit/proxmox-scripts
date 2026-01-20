@@ -1,7 +1,4 @@
 #cloud-config
-groups:
-  - sudo
-
 users:
   - name: jnbolsen
     gecos: Administrative user
