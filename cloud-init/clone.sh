@@ -121,7 +121,7 @@ qm clone "$TEMPLATE_ID" "$VMID" \
   --name "$VM_NAME"
 
 # Create snippet
-SNIPPET_FILE="$SNIPPET_DIR/${VM_NAME}.yml"
+SNIPPET_FILE="$SNIPPET_DIR/vendor.yml"
 
 cat <<EOF > "$SNIPPET_FILE"
 #cloud-config
@@ -134,7 +134,7 @@ echo "Created Cloud-Init vendor snippet local:snippets/${VM_NAME}.yml"
 
 # Set VM config
 qm set "$VMID" \
-  --cicustom "user=local:snippets/user.yml,vendor=local:snippets/${VM_NAME}.yml" \
+  --cicustom "user=local:snippets/user.yml,vendor=local:snippets/vendor.yml" \
   --ipconfig0 ip=dhcp
 
 echo "Clone complete"
