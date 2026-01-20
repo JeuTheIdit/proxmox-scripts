@@ -5,7 +5,7 @@ set -euo pipefail
 VMID=9000
 VM_NAME="debian-13-cloudinit"
 DISK_STORAGE="local-zfs-vm" # VM + EFI disk storage (ZFS)
-CI_STORAGE="local" # Cloud-init ISO and snippet storage
+CI_STORAGE="local" # Cloud-init ISO storage
 BRIDGE="vmbr1" # Default network
 CORES=2
 MEMORY=2048
@@ -52,6 +52,7 @@ qm resize ${VMID} scsi0 ${DISK_SIZE}
 echo "Adding Cloud-Init drive"
 qm set ${VMID} \
   --ide2 ${CI_STORAGE}:cloudinit
+  -- 
 
 # Convert to template
 echo "Converting VM to template"
