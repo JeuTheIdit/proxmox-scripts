@@ -51,8 +51,8 @@ qm resize ${VMID} scsi0 ${DISK_SIZE}
 # Add cloud-init drive
 echo "Adding Cloud-Init drive"
 qm set ${VMID} \
-  --ide2 ${CI_STORAGE}:cloudinit
-  -- 
+  --ide2 ${CI_STORAGE}:cloudinit \
+  --ipconfig0 ip=dhcp
 
 # Convert to template
 echo "Converting VM to template"
