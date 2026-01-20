@@ -36,7 +36,7 @@ write_files:
       UsePAM yes
       X11Forwarding no
       AllowTcpForwarding no
-      AllowAgentForwarding yes
+      AllowAgentForwarding no
 
 runcmd:
   - systemctl restart systemd-networkd
