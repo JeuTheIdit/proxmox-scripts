@@ -30,6 +30,7 @@ packages:
 
 write_files:
   - path: /etc/ssh/sshd_config.d/99-hardening.conf
+    permissions: "0644"
     content: |
       PermitRootLogin no
       PasswordAuthentication no
@@ -38,11 +39,11 @@ write_files:
       UsePAM yes
       X11Forwarding no
       AllowTcpForwarding no
-      AllowAgentForwarding no
+      AllowAgentForwarding yes
 
 runcmd:
   - systemctl restart systemd-networkd
   - systemctl enable --now qemu-guest-agent
   - systemctl restart ssh
 
-final_message: "Debian 13 Cloud-Init base template ready."
+final_message: "Cloud-Init base user and security configuration applied"
