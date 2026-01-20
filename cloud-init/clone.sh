@@ -1,14 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# -----------------------------
 # Constants
-# -----------------------------
 SNIPPET_DIR="/var/lib/vz/snippets"
 
-# -----------------------------
 # Usage
-# -----------------------------
 usage() {
   cat <<EOF
 Usage:
@@ -28,9 +24,7 @@ Example:
 EOF
 }
 
-# -----------------------------
-# Argument Parsing
-# -----------------------------
+# Argument parsing
 TEMPLATE_ID=""
 VMID=""
 VM_NAME=""
@@ -61,9 +55,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# -----------------------------
 # Validation
-# -----------------------------
 if [[ -z "$TEMPLATE_ID" || -z "$VMID" || -z "$VM_NAME" ]]; then
   echo "ERROR: --template, --vmid, and --name are required"
   usage
@@ -85,11 +77,7 @@ if [[ ! -d "$SNIPPET_DIR" ]]; then
   exit 1
 fi
 
-SNIPPET_FILE="$SNIPPET_DIR/${VM_NAME}.yml"
-
-# -----------------------------
 # Clone
-# -----------------------------
 echo "Cloning template $TEMPLATE_ID → VM $VMID"
 echo "VM name: $VM_NAME"
 
@@ -97,9 +85,9 @@ qm clone "$TEMPLATE_ID" "$VMID" \
   --full \
   --name "$VM_NAME"
 
-# -----------------------------
-# Create Snippet
-# -----------------------------
+# Create snippet
+SNIPPET_FILE="$SNIPPET_DIR/${VM_NAME}.yml"
+
 cat <<EOF > "$SNIPPET_FILE"
 #cloud-config
 hostname: ${VM_NAME}
@@ -109,6 +97,7 @@ chmod 600 "$SNIPPET_FILE"
 
 echo "Created Cloud-Init snippet local:snippets/${VM_NAME}.yml"
 
+# Set user config, vendor config, and ip config
 qm set $VMID \
   --cicustom "user=local:snippets/user.yml,vendor=local:snippets/${VM_NAME}.yml" \
   --ipconfig0 ip=dhcp
