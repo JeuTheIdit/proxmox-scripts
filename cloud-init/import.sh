@@ -10,7 +10,7 @@ BRIDGE="vmbr1" # Default network
 CORES=2
 MEMORY=2048
 DISK_SIZE="32G"
-IMAGE_URL="https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-amd64.qcow2"
+IMAGE_URL="https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-amd64.raw"
 IMAGE_FILE="debian-13-genericcloud-amd64.qcow2"
 
 #Download cloud image
