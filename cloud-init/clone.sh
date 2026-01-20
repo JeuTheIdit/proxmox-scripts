@@ -16,9 +16,7 @@ Required:
   --name <name>       Name of the new VM (used for snippet filename)
 
 Optional:
-  --cpu <cores>       Number of CPU cores (default: 2)
-  --memory <MB>       Memory in MB (default: 2048)
-  --disk <size>       Disk size (e.g., 8G, default: 8G)
+  --disk <size>       Disk size (e.g., 8G, must be greater than 8G)
   --debug             Enable debug output
 
 Behavior:
@@ -30,7 +28,7 @@ Behavior:
 
 Examples:
   $0 --template 9000 --vmid 213 --name debian13-app01
-  $0 --template 9000 --vmid 213 --name debian13-app01 --cpu 2 --memory 2048
+  $0 --template 9000 --vmid 213 --name debian13-app01 --disk 16G
 EOF
 }
 
@@ -38,9 +36,8 @@ EOF
 TEMPLATE_ID=""
 VMID=""
 VM_NAME=""
-CPU=2
-MEMORY=2048
-DISK_SIZE="8G"
+DISK_SIZE=""
+RESIZE=false
 DEBUG=false
 
 while [[ $# -gt 0 ]]; do
@@ -57,15 +54,8 @@ while [[ $# -gt 0 ]]; do
       VM_NAME="$2"
       shift 2
       ;;
-    --cpu)
-      CPU="$2"
-      shift 2
-      ;;
-    --memory)
-      MEMORY="$2"
-      shift 2
-      ;;
-    --disk)
+    --resize)
+      RESIZE=true
       DISK_SIZE="$2"
       shift 2
       ;;
@@ -153,14 +143,14 @@ echo "Created Cloud-Init vendor snippet local:snippets/${VM_NAME}.yml"
 
 # Set VM config
 qm set "$VMID" \
-  --cores "$CPU" \
-  --memory "$MEMORY" \
   --cicustom "user=local:snippets/user.yml,vendor=local:snippets/${VM_NAME}.yml" \
   --ipconfig0 ip=dhcp
 
-# Resize VM disk
-echo "Resizing VM disk to $DISK_SIZE"
-sudo qm resize "$VMID" scsi0 "$DISK_SIZE"
+# Resize VM disk if flag is set
+if [[ "$RESIZE" == true ]]; then
+  echo "Resizing disk to $DISK_SIZE"
+  sudo qm resize "$VMID" scsi0 "$DISK_SIZE"
+fi
 
 echo "Clone complete"
 qm config "$VMID"
