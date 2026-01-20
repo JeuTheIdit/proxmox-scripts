@@ -27,6 +27,7 @@ qm create ${VMID} \
   --ostype l26 \
   --bios ovmf \
   --agent enabled=1 \
+  --onboot 1 \
   --machine q35 \
   --scsihw virtio-scsi-single \
   --net0 virtio,bridge=${BRIDGE}
