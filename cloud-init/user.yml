@@ -36,6 +36,6 @@ write_files:
       AllowAgentForwarding no
 
 runcmd:
-  - reboot
+  - sh -c "IF=\$(ip route | awk '/default/ {print \$5; exit}'); [ -n \"\$IF\" ] && dhclient -r \$IF && dhclient \$IF"
 
 final_message: "Debian 13 Cloud-Init base template ready."
