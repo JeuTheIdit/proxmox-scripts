@@ -87,11 +87,6 @@ fi
 
 SNIPPET_FILE="$SNIPPET_DIR/${VM_NAME}.yml"
 
-if [[ -e "$SNIPPET_FILE" ]]; then
-  echo "ERROR: Snippet already exists: $SNIPPET_FILE"
-  exit 1
-fi
-
 # -----------------------------
 # Clone
 # -----------------------------
@@ -112,8 +107,7 @@ EOF
 
 chmod 600 "$SNIPPET_FILE"
 
-echo "Created Cloud-Init snippet:"
-echo "local:snippets/${VM_NAME}.yml"
+echo "Created Cloud-Init snippet local:snippets/${VM_NAME}.yml"
 
 qm set $VMID \
   --cicustom "user=local:snippets/user.yml,vendor=local:snippets/${VM_NAME}.yml" \
