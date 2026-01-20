@@ -16,7 +16,6 @@ Required:
   --name <name>       Name of the new VM (used for snippet filename)
 
 Optional:
-  --disk <size>       Disk size (e.g., 8G, must be greater than 8G)
   --debug             Enable debug output
 
 Behavior:
@@ -28,7 +27,6 @@ Behavior:
 
 Examples:
   $0 --template 9000 --vmid 213 --name debian13-app01
-  $0 --template 9000 --vmid 213 --name debian13-app01 --disk 16G
 EOF
 }
 
@@ -36,8 +34,6 @@ EOF
 TEMPLATE_ID=""
 VMID=""
 VM_NAME=""
-DISK_SIZE=""
-RESIZE=false
 DEBUG=false
 
 while [[ $# -gt 0 ]]; do
@@ -52,11 +48,6 @@ while [[ $# -gt 0 ]]; do
       ;;
     --name)
       VM_NAME="$2"
-      shift 2
-      ;;
-    --resize)
-      RESIZE=true
-      DISK_SIZE="$2"
       shift 2
       ;;
     --debug)
@@ -145,12 +136,6 @@ echo "Created Cloud-Init vendor snippet local:snippets/${VM_NAME}.yml"
 qm set "$VMID" \
   --cicustom "user=local:snippets/user.yml,vendor=local:snippets/${VM_NAME}.yml" \
   --ipconfig0 ip=dhcp
-
-# Resize VM disk if flag is set
-if [[ "$RESIZE" == true ]]; then
-  echo "Resizing disk to $DISK_SIZE"
-  qm resize "$VMID" scsi0 "$DISK_SIZE"
-fi
 
 echo "Clone complete"
 qm config "$VMID"
