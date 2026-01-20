@@ -149,7 +149,7 @@ qm set "$VMID" \
 # Resize VM disk if flag is set
 if [[ "$RESIZE" == true ]]; then
   echo "Resizing disk to $DISK_SIZE"
-  sudo qm resize "$VMID" scsi0 "$DISK_SIZE"
+  qm resize "$VMID" scsi0 "$DISK_SIZE"
 fi
 
 echo "Clone complete"
