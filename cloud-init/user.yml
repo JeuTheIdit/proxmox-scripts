@@ -1,10 +1,14 @@
 #cloud-config
+groups:
+  - sudo
+
 users:
   - name: jnbolsen
     gecos: Administrative user
     groups: sudo
     sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/bash
+    lock_passwd: true
     ssh_authorized_keys:
       - ssh-ed25519 AAAA_YOUR_PUBLIC_KEY_HERE
   - name: ansible
@@ -12,6 +16,7 @@ users:
     groups: sudo
     sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/bash
+    lock_passwd: true
     ssh_authorized_keys:
       - ssh-ed25519 AAAA_YOUR_PUBLIC_KEY_HERE
 
